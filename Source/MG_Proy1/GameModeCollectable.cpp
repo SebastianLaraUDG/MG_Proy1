@@ -15,9 +15,13 @@ void AGameModeCollectable::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Check if item class was specified.
 	if (!ItemClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ERROR: ITEM CLASS WAS NOT SPECIFIED FOR GAME MODE: %s"), *GetNameSafe(this));
 		return;
-	
+	}
+
 	TArray<AActor*> OutActors;
 
 	// Find the Target Holder
@@ -27,17 +31,21 @@ void AGameModeCollectable::BeginPlay()
 		OutActors
 	);
 
-	// Save a reference to them (if found)
-	if (!OutActors.IsEmpty())
+	// Check if no Target Holder was found.
+	if (OutActors.IsEmpty())
 	{
-		// En teoria deberia haber solo una instancia de target holer en el nivel.
-		// Por eso esta codificado especificamente para usar [0]
-		if (ATargetHolder* TH = Cast<ATargetHolder>(OutActors[0]))
-		{
-			TargetHolder = TH;
-		}
-		check(TargetHolder!=nullptr);
+		UE_LOG(LogTemp, Error, TEXT("ERROR: No Target holder was found FOR GAME MODE: %s"), *GetNameSafe(this));
+		return;
 	}
+	// Save a reference to them (if found)
+
+	// En teoria deberia haber solo una instancia de target holer en el nivel.
+	// Por eso esta codificado especificamente para usar [0]
+	if (ATargetHolder* Th = Cast<ATargetHolder>(OutActors[0]))
+	{
+		TargetHolder = Th;
+	}
+	check(TargetHolder!=nullptr);
 
 	// Spawn item
 	if (UWorld* const World = GetWorld())
@@ -68,7 +76,7 @@ void AGameModeCollectable::OnItemBeginOverlap(AActor* OverlappedActor, AActor* O
 	}
 }
 
-void AGameModeCollectable::PlaceInRandomPositionInRange()
+void AGameModeCollectable::PlaceInRandomPositionInRange() const
 {
 	if (!TargetHolder || TargetHolder->Points.IsEmpty())
 	{

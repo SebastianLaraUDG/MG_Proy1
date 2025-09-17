@@ -19,29 +19,28 @@ class MG_PROY1_API AGameModeCollectable : public AGameModeBase
 public:
 	AGameModeCollectable();
 
-	UPROPERTY(EditDefaultsOnly,meta = (ToolTip = "The item class. Make sure it generates overlap events."))
+	UPROPERTY(EditDefaultsOnly, meta = (ToolTip = "The item class. Make sure it generates overlap events."),
+		Category = "Gameplay")
 	TSubclassOf<AActor> ItemClass;
 
-	protected:
-
+protected:
 	virtual void BeginPlay() override;
-	
+
 	// Un objeto que almacena las posibles ubicaciones en el mundo.
-	UPROPERTY(Transient)
+	UPROPERTY(Transient, VisibleAnywhere)
 	TObjectPtr<ATargetHolder> TargetHolder = nullptr;
 
 	// The item we have to collect
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category="Gameplay")
 	TObjectPtr<AActor> Item;
 
 	UFUNCTION()
 	void OnItemBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
-	UFUNCTION(BlueprintCallable,BlueprintPure)
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	FORCEINLINE int32 GetNumberOfItemsTaken() const { return NumberOfItemsTaken; }
 
-
 private:
-	void PlaceInRandomPositionInRange();
+	void PlaceInRandomPositionInRange() const;
 	int32 NumberOfItemsTaken = 0;
 };
