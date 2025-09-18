@@ -112,7 +112,7 @@ void AUniversalSolutionCharacter::Look(const FInputActionValue& Value)
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	// route the input
-	DoLook(LookAxisVector.X, LookAxisVector.Y);
+	DoLook(LookAxisVector.X, -LookAxisVector.Y); // Negate Y because IA sucks
 }
 
 void AUniversalSolutionCharacter::DoMove(float Right, float Forward)
