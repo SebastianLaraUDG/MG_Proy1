@@ -6,6 +6,8 @@
 #include "TargetHolder.h"
 #include "Engine/TargetPoint.h"
 #include "GameFramework/Character.h"
+#include "Components/SphereComponent.h"
+
 
 AGameModeCollectable::AGameModeCollectable()
 {
@@ -59,31 +61,47 @@ void AGameModeCollectable::BeginPlay()
 	// Bind overlap
 	if (Item)
 	{
-		Item->OnActorBeginOverlap.AddDynamic(this, &ThisClass::OnItemBeginOverlap);
+		USphereComponent* SphereCollider = Item->FindComponentByClass<USphereComponent>();
+		if (SphereCollider)
+		{
+			SphereCollider->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnItemBeginOverlap);
+		}
 	}
 }
 
-void AGameModeCollectable::OnItemBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
+void AGameModeCollectable::OnItemBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                              const FHitResult& SweepResult)
 {
 	// Collided with player
-	if (OverlappedActor == UGameplayStatics::GetPlayerCharacter(this, 0))
+	if (OtherActor == UGameplayStatics::GetPlayerCharacter(this, 0))
 	{
 		// Change position of item
 		PlaceInRandomPositionInRange();
-		++NumberOfItemsTaken;
-		UE_LOG(LogTemp, Display, TEXT("Number of items taken = %d"), NumberOfItemsTaken);
+		NumberOfItemsTaken++;
+		UE_LOG(LogTemp, Display, TEXT("Number of items taken = %d. Called from %s"), NumberOfItemsTaken,
+		       *GetNameSafe(this));
 		// TODO: other stuff of the project I don't remember.
+
+		OnPlayerOverlappedWithItem.Broadcast(TimeToAdd);
 	}
 }
 
-void AGameModeCollectable::PlaceInRandomPositionInRange() const
+void AGameModeCollectable::PlaceInRandomPositionInRange()
 {
-	if (!TargetHolder || TargetHolder->Points.IsEmpty())
+	if (TargetHolder->Points.IsEmpty())
 	{
 		UE_LOG(LogTemp, Display, TEXT("No target points found"));
 		return;
 	}
-	// Place in a random location
-	int32 PossibleLocation = FMath::RandRange(0, TargetHolder->Points.Num() - 1);
-	Item->SetActorLocation(TargetHolder->Points[PossibleLocation]->GetActorLocation());
+	// Place in a random location, preventing it from being the previous location.
+	int32 PossibleLocation;
+	do
+	{
+		PossibleLocation = FMath::RandRange(0, TargetHolder->Points.Num() - 1);
+		Item->SetActorLocation(TargetHolder->Points[PossibleLocation]->GetActorLocation());
+		UKismetSystemLibrary::PrintString(this,TEXT("Changed place!"));
+	}
+	while (LastItemLocation == PossibleLocation);
+	LastItemLocation = PossibleLocation;
 }
