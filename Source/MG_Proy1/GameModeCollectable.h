@@ -10,6 +10,7 @@ class ATargetHolder;
 class AActor;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerOverlappedWithItemDelegate, float, TimeToAdd);
+
 /**
  * Este game mode tiene dependencia directa a la clase TargetHolder.
  */
@@ -30,7 +31,7 @@ public:
 	float TimeRemaining = 20.0f;
 
 	// Time to add when player overlaps with items.
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Transient, Category = "Gameplay")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient, Category = "Gameplay")
 	float TimeToAdd = 10.0f;
 
 protected:
@@ -41,20 +42,23 @@ protected:
 	TObjectPtr<ATargetHolder> TargetHolder = nullptr;
 
 	// The item we have to collect
-	UPROPERTY(VisibleAnywhere, Category="Gameplay")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, BlueprintReadOnly, Category="Gameplay")
 	TObjectPtr<AActor> Item;
-	
-	UFUNCTION()
-	void OnItemBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	FORCEINLINE int32 GetNumberOfItemsTaken() const { return NumberOfItemsTaken; }
 
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerOverlappedWithItemDelegate OnPlayerOverlappedWithItem;
 
-private:
-	void PlaceInRandomPositionInRange();
+	UPROPERTY(BlueprintReadWrite)
 	int32 NumberOfItemsTaken = 0;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	FORCEINLINE int32 GetNumberOfItemsTaken() const { return NumberOfItemsTaken; }
+
+	UFUNCTION(BlueprintCallable)
+	void PlaceInRandomPositionInRange(UPrimitiveComponent* Collider);
+
+	UFUNCTION(BlueprintCallable)
+	void CallPlayerOverlappedWithItemDelegate(UPrimitiveComponent* Collider);
+private:
 	int32 LastItemLocation = -1;
 };

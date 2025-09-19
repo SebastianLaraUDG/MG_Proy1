@@ -5,9 +5,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "TargetHolder.h"
 #include "Engine/TargetPoint.h"
-#include "GameFramework/Character.h"
-#include "Components/SphereComponent.h"
-
 
 AGameModeCollectable::AGameModeCollectable()
 {
@@ -54,46 +51,20 @@ void AGameModeCollectable::BeginPlay()
 	{
 		Item = World->SpawnActor<AActor>(ItemClass, FVector::ZeroVector, FRotator::ZeroRotator);
 	}
-
-	// Place in a random location
-	PlaceInRandomPositionInRange();
-
-	// Bind overlap
-	if (Item)
-	{
-		USphereComponent* SphereCollider = Item->FindComponentByClass<USphereComponent>();
-		if (SphereCollider)
-		{
-			SphereCollider->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnItemBeginOverlap);
-		}
-	}
+	
 }
 
-void AGameModeCollectable::OnItemBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-                                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
-                                              const FHitResult& SweepResult)
-{
-	// Collided with player
-	if (OtherActor == UGameplayStatics::GetPlayerCharacter(this, 0))
-	{
-		// Change position of item
-		PlaceInRandomPositionInRange();
-		NumberOfItemsTaken++;
-		UE_LOG(LogTemp, Display, TEXT("Number of items taken = %d. Called from %s"), NumberOfItemsTaken,
-		       *GetNameSafe(this));
-		// TODO: other stuff of the project I don't remember.
 
-		OnPlayerOverlappedWithItem.Broadcast(TimeToAdd);
-	}
-}
-
-void AGameModeCollectable::PlaceInRandomPositionInRange()
+void AGameModeCollectable::PlaceInRandomPositionInRange(UPrimitiveComponent* Collider)
 {
 	if (TargetHolder->Points.IsEmpty())
 	{
 		UE_LOG(LogTemp, Display, TEXT("No target points found"));
 		return;
 	}
+	// Temporarily disable collision
+	Collider->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+	
 	// Place in a random location, preventing it from being the previous location.
 	int32 PossibleLocation;
 	do
@@ -104,4 +75,16 @@ void AGameModeCollectable::PlaceInRandomPositionInRange()
 	}
 	while (LastItemLocation == PossibleLocation);
 	LastItemLocation = PossibleLocation;
+	Collider->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
+}
+
+void AGameModeCollectable::CallPlayerOverlappedWithItemDelegate(UPrimitiveComponent* Collider)
+{
+	// Change position of item
+	PlaceInRandomPositionInRange(Collider);
+	NumberOfItemsTaken++;
+	UE_LOG(LogTemp, Display, TEXT("Number of items taken = %d. Called from %s"), NumberOfItemsTaken,
+	       *GetNameSafe(this));
+	
+	OnPlayerOverlappedWithItem.Broadcast(TimeToAdd);
 }
