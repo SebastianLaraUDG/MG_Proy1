@@ -30,6 +30,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient, Category = "Gameplay")
 	float TimeToAdd = 10.0f;
 
+	// Duracion del nivel.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Transient, Category = "Gameplay")
+	float GameDuration = 20.0f;
+
 protected:
 	virtual void BeginPlay() override;
 
