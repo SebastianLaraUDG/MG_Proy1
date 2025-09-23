@@ -26,10 +26,6 @@ public:
 		Category = "Gameplay")
 	TSubclassOf<AActor> ItemClass;
 
-	// El tiempo restante antes de Game over. (Note: update only with events, not on Tick)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay")
-	float TimeRemaining = 20.0f;
-
 	// Time to add when player overlaps with items.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient, Category = "Gameplay")
 	float TimeToAdd = 10.0f;
@@ -48,8 +44,11 @@ protected:
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerOverlappedWithItemDelegate OnPlayerOverlappedWithItem;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	int32 NumberOfItemsTaken = 0;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	int32 NumberOfItemsForVictory = 5;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	FORCEINLINE int32 GetNumberOfItemsTaken() const { return NumberOfItemsTaken; }
