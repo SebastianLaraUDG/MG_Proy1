@@ -71,7 +71,9 @@ void AGameModeCollectable::PlaceInRandomPositionInRange(UPrimitiveComponent* Col
 	{
 		PossibleLocation = FMath::RandRange(0, TargetHolder->Points.Num() - 1);
 		Item->SetActorLocation(TargetHolder->Points[PossibleLocation]->GetActorLocation());
+#if WITH_EDITOR
 		UKismetSystemLibrary::PrintString(this,TEXT("Changed place!"));
+#endif
 	}
 	while (LastItemLocation == PossibleLocation);
 	LastItemLocation = PossibleLocation;
