@@ -44,14 +44,16 @@ void AGameModeCollectable::BeginPlay()
 	{
 		TargetHolder = Th;
 	}
-	check(TargetHolder!=nullptr);
+	else
+	{
+		UE_LOG(LogTemp, Display, TEXT("ERROR: Target Holder is null in %s"), *GetNameSafe(this));
+	}
 
 	// Spawn item
 	if (UWorld* const World = GetWorld())
 	{
 		Item = World->SpawnActor<AActor>(ItemClass, FVector::ZeroVector, FRotator::ZeroRotator);
 	}
-	
 }
 
 
@@ -64,7 +66,7 @@ void AGameModeCollectable::PlaceInRandomPositionInRange(UPrimitiveComponent* Col
 	}
 	// Temporarily disable collision
 	Collider->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
-	
+
 	// Place in a random location, preventing it from being the previous location.
 	int32 PossibleLocation;
 	do
@@ -87,6 +89,6 @@ void AGameModeCollectable::CallPlayerOverlappedWithItemDelegate(UPrimitiveCompon
 	NumberOfItemsTaken++;
 	UE_LOG(LogTemp, Display, TEXT("Number of items taken = %d. Called from %s"), NumberOfItemsTaken,
 	       *GetNameSafe(this));
-	
+
 	OnPlayerOverlappedWithItem.Broadcast(TimeToAdd);
 }
