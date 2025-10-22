@@ -1,4 +1,4 @@
-// Proyecto 1 de motores graficos II. S, A y E.
+// Proyectos de motores graficos II. S, A y E.
 
 #pragma once
 
@@ -7,7 +7,7 @@
 #include "GameModeMonasChinas.generated.h"
 
 /**
- * 
+ * Game mode del nivel unico del proyeco 2. FPS de monas chinas.
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEndGame);
 
