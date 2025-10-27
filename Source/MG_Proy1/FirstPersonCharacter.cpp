@@ -12,13 +12,17 @@
 #include "Components/PawnNoiseEmitterComponent.h"
 #include "InputActionValue.h"
 #include "HealthComponent.h"
-#include "Components/PrimitiveComponent.h"
+#include "Blueprint/UserWidget.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Field/FieldSystemActor.h"
+#include  "Field/FieldSystem.h"
+#include  "Field/FieldSystemComponent.h"
 
 
 // Sets default values
 AFirstPersonCharacter::AFirstPersonCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Set size for collision capsule
@@ -35,7 +39,8 @@ AFirstPersonCharacter::AFirstPersonCharacter()
 	// Create the Camera Component	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
 	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
-	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, 0.0f));
+	FirstPersonCameraComponent->
+		SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, 0.0f));
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 	FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
 	FirstPersonCameraComponent->bEnableFirstPersonScale = true;
@@ -60,6 +65,59 @@ AFirstPersonCharacter::AFirstPersonCharacter()
 
 	// configure movement
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 600.0f, 0.0f);
+
+	// Weapon Mesh
+	CurrentWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon Mesh"));
+	CurrentWeaponMesh->SetupAttachment(FirstPersonCameraComponent);
+}
+
+void AFirstPersonCharacter::DoStartFiring()
+{
+	FVector Start, End;
+	FHitResult HitResult;
+
+	Start = GetFirstPersonCameraComponent()->GetComponentLocation();
+	End = Start + GetFirstPersonCameraComponent()->GetForwardVector() * MaxAimDistance;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		UKismetSystemLibrary::PrintString(this, TEXT("Impacto el linetrace!"));
+		// Depuración de la esfera de impacto
+		UKismetSystemLibrary::DrawDebugSphere(this, HitResult.ImpactPoint, 50.0f, 12, FLinearColor::Red, 25.0f);
+
+		
+
+		/*
+		// Activa al field actor y sus fisicas por un momento
+		FieldSystemActor->SetActorHiddenInGame(false);
+		FieldSystemActor->SetActorEnableCollision(true);
+		// Lo vuevle a ocultar despues de un frame
+		GetWorldTimerManager().SetTimerForNextTick(
+			[this]()
+		{
+			FieldSystemActor->SetActorHiddenInGame(true);
+			FieldSystemActor->SetActorEnableCollision(false);
+		});
+		*/
+		/*
+		AActor* FieldSystemActor = GetWorld()->SpawnActor<AFieldSystemActor>(
+			FieldSystemActorClass, HitResult.ImpactPoint, FRotator::ZeroRotator);
+		FieldSystemActor->SetLifeSpan(0.02f);
+		*/
+	}
+	else
+	{
+		UKismetSystemLibrary::PrintString(this, TEXT("NO Impacto el linetrace!"));
+	}
+}
+
+
+void AFirstPersonCharacter::DoStopFiring()
+{
+	//
 }
 
 // Called to bind functionality to input
@@ -80,10 +138,17 @@ void AFirstPersonCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ThisClass::LookInput);
+
+		// Firing
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ThisClass::DoStartFiring);
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ThisClass::DoStopFiring);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		UE_LOG(LogTemp, Error,
+		       TEXT(
+			       "'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."
+		       ), *GetNameSafe(this));
 	}
 }
 
@@ -96,9 +161,17 @@ void AFirstPersonCharacter::NotifyControllerChanged()
 void AFirstPersonCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
-	CurrentWeapon = GetWorld()->SpawnActor<AActor>(WeaponClass,GetActorTransform());
-	CurrentWeapon->AttachToActor(this,FAttachmentTransformRules::SnapToTargetIncludingScale);
+void AFirstPersonCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (!WidgetClass) return;
+	// Create Widget and add to viewport
+	APlayerController* PlayerController = Cast<APlayerController>(NewController);
+	Widget = CreateWidget(PlayerController, WidgetClass);
+	Widget->AddToViewport(0);
 }
 
 void AFirstPersonCharacter::MoveInput(const FInputActionValue& Value)
@@ -108,7 +181,6 @@ void AFirstPersonCharacter::MoveInput(const FInputActionValue& Value)
 
 	// pass the axis values to the move input
 	DoMove(MovementVector.X, MovementVector.Y);
-
 }
 
 void AFirstPersonCharacter::LookInput(const FInputActionValue& Value)
@@ -118,7 +190,6 @@ void AFirstPersonCharacter::LookInput(const FInputActionValue& Value)
 
 	// pass the axis values to the aim input
 	DoAim(LookAxisVector.X, LookAxisVector.Y);
-
 }
 
 void AFirstPersonCharacter::DoAim(float Yaw, float Pitch)

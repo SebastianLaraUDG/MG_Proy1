@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Logging/LogMacros.h"
 #include "FirstPersonCharacter.generated.h"
+
 
 class UInputComponent;
 class USkeletalMeshComponent;
@@ -24,9 +24,9 @@ UCLASS(Abstract, BlueprintType, Blueprintable)
 class MG_PROY1_API AFirstPersonCharacter : public ACharacter
 {
 	GENERATED_BODY()
-	
+
 private:
-		/** Pawn mesh: first person view (arms; seen only by self) */
+	/** Pawn mesh: first person view (arms; seen only by self) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* FirstPersonMesh;
 
@@ -39,7 +39,6 @@ private:
 	UPawnNoiseEmitterComponent* PawnNoiseEmitter;
 
 protected:
-
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
 	TObjectPtr<UInputAction> JumpAction;
@@ -73,23 +72,36 @@ protected:
 	float MaxAimDistance = 10000.0f;
 
 	/** Weapon currently equipped and ready to shoot with */
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category="Weapon")
-	TObjectPtr<AActor/*WeaponActor*/> CurrentWeapon;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon")
+	TObjectPtr<UStaticMeshComponent> CurrentWeaponMesh;
 
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly)
-	TSubclassOf<AActor> WeaponClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="UI")
+	TSubclassOf<UUserWidget> WidgetClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="UI")
+	TObjectPtr<UUserWidget> Widget;
+
 	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category= "Gameplay")
+	TSubclassOf<AActor> FieldSystemActorClass;
+
 public:
-	
 	AFirstPersonCharacter();
 
 	/** Bullet count updated delegate */
-	FBulletCountUpdatedDelegate OnBulletCountUpdated;	
-	
-protected:
+	FBulletCountUpdatedDelegate OnBulletCountUpdated;
 
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void DoStartFiring();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void DoStopFiring();
+
+protected:
 	virtual void BeginPlay() override;
-	
+
+	virtual void PossessedBy(AController* NewController) override;
+
 	/** Called from Input Actions for movement input */
 	void MoveInput(const FInputActionValue& Value);
 
@@ -118,11 +130,10 @@ protected:
 	virtual void NotifyControllerChanged() override;
 
 	/** Health Component */
-	UPROPERTY(BlueprintReadWrite,VisibleAnywhere,Category="Components|Health")
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category="Components|Health")
 	TObjectPtr<UHealthComponent> HealthComponent;
-	
-public:
 
+public:
 	/** Returns the first person mesh **/
 	USkeletalMeshComponent* GetFirstPersonMesh() const { return FirstPersonMesh; }
 
