@@ -1,4 +1,4 @@
-// Proyecto 1 de motores graficos II. S, A y E.
+// Proyectos de motores graficos II. S, A y E.
 
 
 #include "HealthComponent.h"
@@ -11,6 +11,7 @@ UHealthComponent::UHealthComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
+	bStartWithMaximumHealth = true;
 }
 
 
@@ -21,12 +22,19 @@ void UHealthComponent::BeginPlay()
 
 	// Bind damage taken
 	GetOwner()->OnTakeAnyDamage.AddDynamic(this, &ThisClass::HandleTakeDamage);
+
+	// Start with 100 percent health if specified.
+	if (bStartWithMaximumHealth)
+	{
+		CurrentHealth = MaxHealth;
+	}
 }
 
 void UHealthComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
                                         class AController* InstigatedBy, AActor* DamageCauser)
 {
 	CurrentHealth -= Damage;
+	OnHealthChanged.Broadcast(-Damage, GetHealthPercentage()); // Negative because it is a health decrement.
 
 	// Llama eventos vinculados
 	if (CurrentHealth < 0.0f)

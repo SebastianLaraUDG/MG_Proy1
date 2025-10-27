@@ -1,4 +1,4 @@
-// Proyecto 1 de motores graficos II. S, A y E.
+// Proyectos de motores graficos II. S, A y E.
 
 #pragma once
 
@@ -7,6 +7,7 @@
 #include "HealthComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedSignature,float, HealthChange, float, HealthPercentage);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MG_PROY1_API UHealthComponent : public UActorComponent
@@ -34,9 +35,16 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UPROPERTY(BlueprintAssignable,BlueprintReadOnly,BlueprintCallable,Category="Health|Gameplay")
+	FOnHealthChangedSignature OnHealthChanged;
+	
 	UPROPERTY(BlueprintAssignable,BlueprintReadOnly, Category="Health|Gameplay")
 	FOnDeathSignature OnDeath;
 	
 	UFUNCTION(BlueprintCallable,blueprintPure,Category="Health|Gameplay")
 	FORCEINLINE float GetHealthPercentage() const { return CurrentHealth / MaxHealth; }
+
+
+	UPROPERTY(EditAnywhere,blueprintreadonly,Category="Health|Gameplay")
+	bool bStartWithMaximumHealth;
 };

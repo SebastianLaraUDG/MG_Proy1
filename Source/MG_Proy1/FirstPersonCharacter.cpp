@@ -4,20 +4,16 @@
 #include "FirstPersonCharacter.h"
 
 #include "EnhancedInputComponent.h"
-#include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Components/PawnNoiseEmitterComponent.h"
 #include "InputActionValue.h"
 #include "HealthComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "Engine/DamageEvents.h"
+#include "GeometryCollection/GeometryCollectionComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Field/FieldSystemActor.h"
-#include  "Field/FieldSystem.h"
-#include  "Field/FieldSystemComponent.h"
-
 
 // Sets default values
 AFirstPersonCharacter::AFirstPersonCharacter()
@@ -59,9 +55,7 @@ AFirstPersonCharacter::AFirstPersonCharacter()
 
 	// Health component
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
-
-	// create the noise emitter component
-	PawnNoiseEmitter = CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("Pawn Noise Emitter"));
+	HealthComponent->RegisterComponent();
 
 	// configure movement
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 600.0f, 0.0f);
@@ -85,28 +79,17 @@ void AFirstPersonCharacter::DoStartFiring()
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
 		UKismetSystemLibrary::PrintString(this, TEXT("Impacto el linetrace!"));
-		// Depuración de la esfera de impacto
-		UKismetSystemLibrary::DrawDebugSphere(this, HitResult.ImpactPoint, 50.0f, 12, FLinearColor::Red, 25.0f);
-
-		
-
-		/*
-		// Activa al field actor y sus fisicas por un momento
-		FieldSystemActor->SetActorHiddenInGame(false);
-		FieldSystemActor->SetActorEnableCollision(true);
-		// Lo vuevle a ocultar despues de un frame
-		GetWorldTimerManager().SetTimerForNextTick(
-			[this]()
+		// Aplica destruccion e impulso a la fracture
+		if ( UGeometryCollectionComponent* GeometryCollectionComponent = HitResult.GetActor()->GetComponentByClass<UGeometryCollectionComponent>())
 		{
-			FieldSystemActor->SetActorHiddenInGame(true);
-			FieldSystemActor->SetActorEnableCollision(false);
-		});
-		*/
-		/*
-		AActor* FieldSystemActor = GetWorld()->SpawnActor<AFieldSystemActor>(
-			FieldSystemActorClass, HitResult.ImpactPoint, FRotator::ZeroRotator);
-		FieldSystemActor->SetLifeSpan(0.02f);
-		*/
+			GeometryCollectionComponent->ApplyExternalStrain(HitResult.Item,HitResult.Location,75.0f,0,0,500000.0f);
+			GeometryCollectionComponent->ApplyBreakingLinearVelocity(HitResult.Item,(End - Start).GetSafeNormal() * 2000.0f);
+		}
+		if (HitResult.GetActor())
+		{
+			FDamageEvent DamageEvent;
+			HitResult.GetActor()->TakeDamage(WeaponDamage,DamageEvent,GetController(),this); // Si hubiera dado tiempo de crear un sistema de armas, en lugar de 'this' seria el actor Weapon.
+		}
 	}
 	else
 	{
@@ -157,11 +140,6 @@ void AFirstPersonCharacter::NotifyControllerChanged()
 	Super::NotifyControllerChanged();
 }
 
-
-void AFirstPersonCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-}
 
 void AFirstPersonCharacter::PossessedBy(AController* NewController)
 {

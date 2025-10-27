@@ -9,8 +9,8 @@ public class MG_Proy1 : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG",
-			"GeometryCollectionEngine", "PhysicsCore" ,"FieldSystemEngine",
-			"Chaos", "ChaosCore", "ChaosSolverEngine"
+			"GeometryCollectionEngine"/*, "PhysicsCore" ,"FieldSystemEngine",
+			"Chaos", "ChaosCore", "ChaosSolverEngine"*/
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

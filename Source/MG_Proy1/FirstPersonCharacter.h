@@ -12,15 +12,13 @@ class USkeletalMeshComponent;
 class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
-class UPawnNoiseEmitterComponent;
 class UHealthComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBulletCountUpdatedDelegate, int32, MagazineSize, int32, Bullets);
 
 /*
  * The base of a first person character.
  */
-UCLASS(Abstract, BlueprintType, Blueprintable)
+UCLASS(BlueprintType, Blueprintable)
 class MG_PROY1_API AFirstPersonCharacter : public ACharacter
 {
 	GENERATED_BODY()
@@ -34,10 +32,11 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
-	/** AI Noise emitter component */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	UPawnNoiseEmitterComponent* PawnNoiseEmitter;
+	/** Health Component */
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="Components|Health", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UHealthComponent> HealthComponent;
 
+	
 protected:
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
@@ -59,14 +58,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category ="Input")
 	UInputAction* FireAction;
 
-	/** Name of the first person mesh weapon socket */
-	UPROPERTY(EditAnywhere, Category ="Weapons")
-	FName FirstPersonWeaponSocket = FName("HandGrip_R");
-
-	/** Name of the third person mesh weapon socket */
-	UPROPERTY(EditAnywhere, Category ="Weapons")
-	FName ThirdPersonWeaponSocket = FName("HandGrip_R");
-
 	/** Max distance to use for aim traces */
 	UPROPERTY(EditAnywhere, Category ="Aim", meta = (ClampMin = 0, ClampMax = 100000, Units = "cm"))
 	float MaxAimDistance = 10000.0f;
@@ -81,15 +72,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="UI")
 	TObjectPtr<UUserWidget> Widget;
 
-	
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category= "Gameplay")
-	TSubclassOf<AActor> FieldSystemActorClass;
 
 public:
 	AFirstPersonCharacter();
-
-	/** Bullet count updated delegate */
-	FBulletCountUpdatedDelegate OnBulletCountUpdated;
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void DoStartFiring();
@@ -98,7 +83,6 @@ public:
 	void DoStopFiring();
 
 protected:
-	virtual void BeginPlay() override;
 
 	virtual void PossessedBy(AController* NewController) override;
 
@@ -129,11 +113,11 @@ protected:
 
 	virtual void NotifyControllerChanged() override;
 
-	/** Health Component */
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category="Components|Health")
-	TObjectPtr<UHealthComponent> HealthComponent;
-
 public:
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Gameplay|Weapons")
+	float WeaponDamage = 5.0f;
+	
 	/** Returns the first person mesh **/
 	USkeletalMeshComponent* GetFirstPersonMesh() const { return FirstPersonMesh; }
 
