@@ -84,6 +84,7 @@ public:
 
 protected:
 
+	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
 
 	/** Called from Input Actions for movement input */
@@ -108,6 +109,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
+	UFUNCTION()
+	virtual void CheckIfIsDead(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+	
 	/** Set up input action bindings */
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 

@@ -4,6 +4,7 @@
 #include "FirstPersonCharacter.h"
 
 #include "EnhancedInputComponent.h"
+#include "GameModeMonasChinas.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -14,6 +15,7 @@
 #include "Engine/DamageEvents.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AFirstPersonCharacter::AFirstPersonCharacter()
@@ -80,15 +82,19 @@ void AFirstPersonCharacter::DoStartFiring()
 	{
 		UKismetSystemLibrary::PrintString(this, TEXT("Impacto el linetrace!"));
 		// Aplica destruccion e impulso a la fracture
-		if ( UGeometryCollectionComponent* GeometryCollectionComponent = HitResult.GetActor()->GetComponentByClass<UGeometryCollectionComponent>())
+		if (UGeometryCollectionComponent* GeometryCollectionComponent = HitResult.GetActor()->GetComponentByClass<
+			UGeometryCollectionComponent>())
 		{
-			GeometryCollectionComponent->ApplyExternalStrain(HitResult.Item,HitResult.Location,75.0f,0,0,500000.0f);
-			GeometryCollectionComponent->ApplyBreakingLinearVelocity(HitResult.Item,(End - Start).GetSafeNormal() * 2000.0f);
+			GeometryCollectionComponent->
+				ApplyExternalStrain(HitResult.Item, HitResult.Location, 75.0f, 0, 0, 500000.0f);
+			GeometryCollectionComponent->ApplyBreakingLinearVelocity(HitResult.Item,
+			                                                         (End - Start).GetSafeNormal() * 2000.0f);
 		}
 		if (HitResult.GetActor())
 		{
 			FDamageEvent DamageEvent;
-			HitResult.GetActor()->TakeDamage(WeaponDamage,DamageEvent,GetController(),this); // Si hubiera dado tiempo de crear un sistema de armas, en lugar de 'this' seria el actor Weapon.
+			HitResult.GetActor()->TakeDamage(WeaponDamage, DamageEvent, GetController(), this);
+			// Si hubiera dado tiempo de crear un sistema de armas, en lugar de 'this' seria el actor Weapon.
 		}
 	}
 	else
@@ -101,6 +107,14 @@ void AFirstPersonCharacter::DoStartFiring()
 void AFirstPersonCharacter::DoStopFiring()
 {
 	//
+}
+
+void AFirstPersonCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Bind so that when receiving damage we check if game mode should stop match.
+	OnTakeAnyDamage.AddDynamic(this, &ThisClass::CheckIfIsDead);
 }
 
 // Called to bind functionality to input
@@ -200,4 +214,18 @@ void AFirstPersonCharacter::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
+}
+
+void AFirstPersonCharacter::CheckIfIsDead(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
+                                          class AController* InstigatedBy, AActor* DamageCauser)
+{
+	// Check if player died
+	if (HealthComponent && HealthComponent->GetHealthPercentage() <= 0.0f)
+	{
+		if (AGameModeMonasChinas* const GameModeMonasChinas = Cast<AGameModeMonasChinas>(
+			UGameplayStatics::GetGameMode(this)))
+		{
+			GameModeMonasChinas->OnEndGame.Broadcast();
+		}
+	}
 }
