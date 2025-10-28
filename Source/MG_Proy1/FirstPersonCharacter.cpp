@@ -80,7 +80,11 @@ void AFirstPersonCharacter::DoStartFiring()
 
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
+#if WITH_EDITOR
 		UKismetSystemLibrary::PrintString(this, TEXT("Impacto el linetrace!"));
+		UKismetSystemLibrary::DrawDebugSphere(this,HitResult.ImpactPoint,10,12,FLinearColor::Yellow,8.0f);
+#endif
+		
 		// Aplica destruccion e impulso a la fracture
 		if (UGeometryCollectionComponent* GeometryCollectionComponent = HitResult.GetActor()->GetComponentByClass<
 			UGeometryCollectionComponent>())

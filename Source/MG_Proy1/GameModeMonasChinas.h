@@ -15,9 +15,11 @@ UCLASS(Blueprintable, BlueprintType, Transient)
 class MG_PROY1_API AGameModeMonasChinas : public AGameModeBase
 {
 	GENERATED_BODY()
-	public :
-		UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Gameplay")
-		int32 puntuacionJugador = 0;
-		UPROPERTY(BlueprintAssignable)
-		FOnEndGame OnEndGame;
+
+public :
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Gameplay")
+	int32 puntuacionJugador = 0;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnEndGame OnEndGame;
 };

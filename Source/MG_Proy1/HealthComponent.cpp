@@ -34,10 +34,11 @@ void UHealthComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, cons
                                         class AController* InstigatedBy, AActor* DamageCauser)
 {
 	CurrentHealth -= Damage;
-	OnHealthChanged.Broadcast(-Damage, GetHealthPercentage()); // Negative because it is a health decrement.
 
 	// Llama eventos vinculados
-	if (CurrentHealth < 0.0f)
+	OnHealthChanged.Broadcast(-Damage, GetHealthPercentage()); // Negative because it is a health decrement.
+	// Death event
+	if (CurrentHealth <= 0.0f)
 	{
 		OnDeath.Broadcast();
 	}

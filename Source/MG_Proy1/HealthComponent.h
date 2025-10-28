@@ -7,14 +7,15 @@
 #include "HealthComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedSignature,float, HealthChange, float, HealthPercentage);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedSignature, float, HealthChange, float, HealthPercentage);
+
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class MG_PROY1_API UHealthComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UHealthComponent();
 
@@ -23,28 +24,32 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-	virtual void HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Health|Gameplay")
-	float MaxHealth = 100.0f;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Health|Gameplay")
-	float CurrentHealth = 0.0f;
-	
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
+	                              class AController* InstigatedBy, AActor* DamageCauser);
 
-	UPROPERTY(BlueprintAssignable,BlueprintReadOnly,BlueprintCallable,Category="Health|Gameplay")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Health|Gameplay")
+	float MaxHealth = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Health|Gameplay")
+	float CurrentHealth = 0.0f;
+
+public:
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+	                           FActorComponentTickFunction* ThisTickFunction) override;
+
+	UFUNCTION(BlueprintCallable, Category="Health|Gameplay")
+	FORCEINLINE void ResetHealth() { CurrentHealth = MaxHealth; }
+
+	UPROPERTY(BlueprintAssignable, BlueprintReadOnly, BlueprintCallable, Category="Health|Gameplay")
 	FOnHealthChangedSignature OnHealthChanged;
-	
-	UPROPERTY(BlueprintAssignable,BlueprintReadOnly, Category="Health|Gameplay")
+
+	UPROPERTY(BlueprintAssignable, BlueprintReadOnly, Category="Health|Gameplay")
 	FOnDeathSignature OnDeath;
-	
-	UFUNCTION(BlueprintCallable,blueprintPure,Category="Health|Gameplay")
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Health|Gameplay")
 	FORCEINLINE float GetHealthPercentage() const { return CurrentHealth / MaxHealth; }
 
-
-	UPROPERTY(EditAnywhere,blueprintreadonly,Category="Health|Gameplay")
+	UPROPERTY(EditAnywhere, blueprintreadonly, Category="Health|Gameplay")
 	bool bStartWithMaximumHealth;
 };
