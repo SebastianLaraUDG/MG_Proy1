@@ -57,7 +57,6 @@ AFirstPersonCharacter::AFirstPersonCharacter()
 
 	// Health component
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
-	HealthComponent->RegisterComponent();
 
 	// configure movement
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 600.0f, 0.0f);

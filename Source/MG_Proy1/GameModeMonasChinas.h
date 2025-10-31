@@ -20,6 +20,9 @@ public :
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Gameplay")
 	int32 puntuacionJugador = 0;
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnEndGame OnEndGame;
+
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE void CallOnEndGame() const { OnEndGame.Broadcast(); }
 };
